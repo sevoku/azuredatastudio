@@ -6,12 +6,13 @@
 import { ExtensionContext } from 'vscode';
 
 import { azureResource } from 'azurecore';
+import { AzureResourceMongoDatabaseServer } from './cosmosDbMongoService';
 import { IAzureResourceService } from '../../../interfaces';
 import { CosmosDbMongoTreeDataProvider } from './cosmosDbMongoTreeDataProvider';
 
 export class CosmosDbMongoProvider implements azureResource.IAzureResourceProvider {
 	public constructor(
-		private _databaseServerService: IAzureResourceService<azureResource.AzureResourceDatabaseServer>,
+		private _databaseServerService: IAzureResourceService<AzureResourceMongoDatabaseServer>,
 		private _extensionContext: ExtensionContext
 	) {
 	}

@@ -16,16 +16,21 @@ interface DbServerGraphData extends GraphData {
 	};
 }
 
-export class CosmosDbMongoService extends ResourceServiceBase<DbServerGraphData, azureResource.AzureResourceDatabaseServer> {
+export interface AzureResourceMongoDatabaseServer extends azureResource.AzureResourceDatabaseServer {
+	isServer: boolean;
+}
+
+export class CosmosDbMongoService extends ResourceServiceBase<DbServerGraphData, AzureResourceMongoDatabaseServer> {
 
 	protected get query(): string {
 		return cosmosMongoDbQuery;
 	}
 
-	protected convertResource(resource: DbServerGraphData): azureResource.AzureResourceDatabaseServer {
+	protected convertResource(resource: DbServerGraphData): AzureResourceMongoDatabaseServer {
 		return {
 			id: resource.id,
 			name: resource.name,
+			isServer: resource.type === azureResource.AzureResourceType.cosmosDbCluster,
 			fullName: resource.properties.fullyQualifiedDomainName,
 			loginName: resource.properties.administratorLogin,
 			defaultDatabaseName: '',

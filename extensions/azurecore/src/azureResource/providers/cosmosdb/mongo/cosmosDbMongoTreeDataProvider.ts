@@ -8,25 +8,26 @@ import * as nls from 'vscode-nls';
 const localize = nls.loadMessageBundle();
 
 import { AzureResourceItemType } from '../../../constants';
+import { AzureResourceMongoDatabaseServer } from './cosmosDbMongoService';
 import { generateGuid } from '../../../utils';
 import { IAzureResourceService } from '../../../interfaces';
 import { ResourceTreeDataProviderBase } from '../../resourceTreeDataProviderBase';
-import { AzureAccountProperties, azureResource } from 'azurecore';
+import { AzureAccountProperties } from 'azurecore';
 import * as azdata from 'azdata';
 
-export class CosmosDbMongoTreeDataProvider extends ResourceTreeDataProviderBase<azureResource.AzureResourceDatabaseServer> {
+export class CosmosDbMongoTreeDataProvider extends ResourceTreeDataProviderBase<AzureResourceMongoDatabaseServer> {
 	private static readonly COSMOSDG_MONGO_PROVIDER_ID = 'COSMOSDB_MONGO';
 	private static readonly CONTAINER_ID = 'azure.resource.providers.databaseServer.treeDataProvider.cosmosDbMongoContainer';
 	private static readonly CONTAINER_LABEL = localize('azure.resource.providers.databaseServer.treeDataProvider.cosmosDbMongoContainerLabel', "CosmosDB for Mongo");
 
 	public constructor(
-		databaseServerService: IAzureResourceService<azureResource.AzureResourceDatabaseServer>,
+		databaseServerService: IAzureResourceService<AzureResourceMongoDatabaseServer>,
 		private _extensionContext: ExtensionContext
 	) {
 		super(databaseServerService);
 	}
 
-	protected getTreeItemForResource(databaseServer: azureResource.AzureResourceDatabaseServer, account: azdata.Account): azdata.TreeItem {
+	protected getTreeItemForResource(databaseServer: AzureResourceMongoDatabaseServer, account: azdata.Account): azdata.TreeItem {
 		return {
 			id: `Cosmosdb_${databaseServer.id ? databaseServer.id : databaseServer.name}`,
 			label: `${databaseServer.name} (CosmosDB Mongo API)`,
@@ -39,16 +40,20 @@ export class CosmosDbMongoTreeDataProvider extends ResourceTreeDataProviderBase<
 			payload: {
 				id: generateGuid(),
 				connectionName: databaseServer.name,
-				serverName: databaseServer.name,
+				// TODO: find a reliable way to get the fqdn or connection string for clusters
+				// meanwhile assume the domain is always *.mongocluster.cosmos.azure.com
+				serverName: !databaseServer.isServer ? databaseServer.name : databaseServer.name + ".mongocluster.cosmos.azure.com",
 				userName: databaseServer.loginName,
 				password: '',
-				authenticationType: azdata.connection.AuthenticationType.AzureMFA,
+				authenticationType: databaseServer.isServer ? azdata.connection.AuthenticationType.SqlLogin : azdata.connection.AuthenticationType.AzureMFA,
 				savePassword: true,
 				groupFullName: '',
 				groupId: '',
 				providerName: CosmosDbMongoTreeDataProvider.COSMOSDG_MONGO_PROVIDER_ID,
 				saveProfile: false,
-				options: {},
+				options: {
+					isServer: databaseServer.isServer,
+				},
 				azureAccount: account.key.accountId,
 				azureTenantId: databaseServer.tenant,
 				azureResourceId: databaseServer.id,
