@@ -13,6 +13,7 @@ interface DbServerGraphData extends GraphData {
 	properties: {
 		fullyQualifiedDomainName: string;
 		administratorLogin: string;
+		connectionString: string;
 	};
 }
 
@@ -27,11 +28,17 @@ export class CosmosDbMongoService extends ResourceServiceBase<DbServerGraphData,
 	}
 
 	protected convertResource(resource: DbServerGraphData): AzureResourceMongoDatabaseServer {
+		let host = resource.name;
+		const isServer = resource.type === azureResource.AzureResourceType.cosmosDbCluster;
+		if (isServer) {
+			const url = new URL(resource.properties.connectionString);
+			host = url.hostname;
+		}
 		return {
 			id: resource.id,
 			name: resource.name,
-			isServer: resource.type === azureResource.AzureResourceType.cosmosDbCluster,
-			fullName: resource.properties.fullyQualifiedDomainName,
+			isServer: isServer,
+			fullName: host,
 			loginName: resource.properties.administratorLogin,
 			defaultDatabaseName: '',
 			tenant: resource.tenantId,
